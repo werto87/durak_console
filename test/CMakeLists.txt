@@ -6,13 +6,8 @@ add_executable(${TEST_TARGET_NAME}
 "main.cxx"
 "test.cxx"
 "constant.hxx"
- )
-
-if (${TARGET_SOURCES})
-target_sources(${TEST_TARGET_NAME} PRIVATE 
 ${TARGET_SOURCES}
-)
-endif()
+ )
 
  if (CMAKE_BINARY_DIR)
  target_compile_definitions(${TEST_TARGET_NAME} PRIVATE PATH_TO_BINARY="${CMAKE_BINARY_DIR}")
