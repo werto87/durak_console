@@ -53,24 +53,67 @@ Game::Game (u_int16_t playerCount) : cardDeck{ generateCardDeck () }, players (p
   std::for_each (players.begin (), players.end (), [this] (Player &player) { playerDrawsCardsFromDeck (player, 6); });
 }
 
-bool
-Game::playerStartsAttack (std::vector<Card> &cards)
+void
+Game::pass (u_int16_t player)
 {
-  auto result = false;
-  auto valueToCompare = cards.front ().value;
-  if (auto cardsToFind = std::find_if (cards.begin (), cards.end (), [valueToCompare] (Card const &card) { return valueToCompare != card.value; }); cardsToFind == cards.end ())
+  if (player == attack)
     {
-      result = true;
-      players.at (attack).putCards (cards, table);
+      attackingPlayerPass = true;
     }
-
-  return result;
+  else if (player == assistAttacker)
+    {
+      assistingPlayerPass = true;
+    }
+  if (attackingPlayerPass && assistingPlayerPass && players.at (defend).getCards ().empty ())
+    {
+      nextRound (false);
+    }
 }
 
-// TODO implement the 3 functions plx
-bool
-Game::playerAssists (u_int16_t player, std::vector<Card> &&cards)
+void
+Game::rewokePass (u_int16_t player)
 {
+  if (player == attack)
+    {
+      attackingPlayerPass = false;
+    }
+  else if (player == assistAttacker)
+    {
+      assistingPlayerPass = false;
+    }
+}
+
+bool
+Game::playerStartsAttack (std::vector<size_t> const &index)
+{
+  auto cards = players.at (attack).getCards ();
+  cards.erase (std::remove_if (cards.begin (), cards.end (), [i = int{}, index] (auto) mutable {
+    auto test = std::find (index.begin (), index.end (), i);
+    i++;
+    return test == index.end ();
+  }));
+  auto valueToCompare = cards.front ().value;
+  if (std::find_if (cards.begin (), cards.end (), [valueToCompare] (Card const &card) { return valueToCompare != card.value; }) == cards.end ())
+    {
+      players.at (attack).putCards (cards, table);
+      if (players.at (attack).getCards ().empty ())
+        {
+          pass (attack);
+        }
+      return true;
+    }
+  return false;
+}
+
+bool
+Game::playerAssists (u_int16_t player, std::vector<size_t> const &index)
+{
+  auto cards = players.at (attack).getCards ();
+  cards.erase (std::remove_if (cards.begin (), cards.end (), [i = int{}, index] (auto) mutable {
+    auto test = std::find (index.begin (), index.end (), i);
+    i++;
+    return test == index.end ();
+  }));
   auto result = false;
   if (player == attack || player == assistAttacker)
     {
@@ -81,18 +124,32 @@ Game::playerAssists (u_int16_t player, std::vector<Card> &&cards)
         {
           result = true;
           players.at (player).putCards (cards, table);
+          if (players.at (player).getCards ().empty ())
+            {
+              pass (player);
+            }
         }
     }
   return result;
 }
 
 bool
-Game::playerDefends (u_int16_t indexFromCardOnTheTable, Card &card)
+Game::playerDefends (u_int16_t indexFromCardOnTheTable, Card &&card)
 {
   auto cardToBeat = table.at (indexFromCardOnTheTable).first;
   if (not table.at (indexFromCardOnTheTable).second && beats (cardToBeat, card, trump))
     {
       table.at (indexFromCardOnTheTable).second = card;
+      players.at (defend).putCards ({ card }, table);
+      if (players.at (defend).getCards ().empty ())
+        {
+          nextRound (false);
+        }
+      else
+        {
+          rewokePass (attack);
+          rewokePass (defend);
+        }
       return true;
     }
   else
@@ -106,6 +163,7 @@ Game::defendingPlayerTakesAllCardsFromTheTable ()
 {
   players.at (defend).takeCards (getTableAsVector ());
   table.clear ();
+  nextRound (true);
 }
 
 void
@@ -207,6 +265,8 @@ Game::drawCards ()
 void
 Game::nextRound (bool attackingSuccess)
 {
+  rewokePass (attack);
+  rewokePass (defend);
   drawCards ();
   calculateNextRoles (attackingSuccess);
 }

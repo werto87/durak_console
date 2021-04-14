@@ -15,14 +15,18 @@ public:
     assistAttacker
   };
 
+  void pass (u_int16_t player);
+
+  void rewokePass (u_int16_t player);
+
   // attack starts round and can only be used by playr with role attack
-  bool playerStartsAttack (std::vector<Card> &cards);
+  bool playerStartsAttack (std::vector<size_t> const &index);
 
   // after attack is started player with role attack and assistAttacker can add cards with same value which are allready on the table
-  bool playerAssists (u_int16_t player, std::vector<Card> &&cards);
+  bool playerAssists (u_int16_t player, std::vector<size_t> const &index);
 
   // defending player can try to beat card on the table
-  bool playerDefends (u_int16_t indexFromCardOnTheTable, Card &card);
+  bool playerDefends (u_int16_t indexFromCardOnTheTable, Card &&card);
 
   void defendingPlayerTakesAllCardsFromTheTable ();
 
@@ -50,6 +54,8 @@ private:
   std::vector<Player> players{};
   std::vector<std::pair<Card, std::optional<Card> > > table{};
   Type trump{};
+  bool attackingPlayerPass = false;
+  bool assistingPlayerPass = false;
 };
 
 std::vector<Card> generateCardDeck ();

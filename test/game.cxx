@@ -17,3 +17,10 @@ TEST_CASE ("at the start of the game the players have 6 cards", "[game]")
   REQUIRE (player1.getCards ().size () == 6);
   REQUIRE (player2.getCards ().size () == 6);
 }
+
+TEST_CASE ("", "[game]")
+{
+  //
+  auto game = Game{ 2 };
+  game.playerStartsAttack ({ {} });
+}
