@@ -29,3 +29,9 @@ beats (Card const &cardToBeat, Card const &cardWhichTriesTobeat, Type trump)
       return false;
     }
 }
+
+bool
+hasSameValue (Card const &x, Card const &y)
+{
+  return x.value == y.value;
+}

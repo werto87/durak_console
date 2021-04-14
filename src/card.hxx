@@ -14,9 +14,36 @@ enum struct Type
 
 struct Card
 {
+  // Regular
   friend bool operator== (Card const &x, Card const &y);
 
   friend bool operator!= (Card const &x, Card const &y);
+
+  // TotallyOrdered
+  friend bool
+  operator< (const Card &x, const Card &y)
+  {
+    if (x.value < y.value) return true;
+    if (y.value < x.value) return false;
+    if (x.type < y.type) return true;
+    if (y.type < x.type) return false;
+    return false;
+  }
+  friend bool
+  operator> (const Card &x, const Card &y)
+  {
+    return y < x;
+  }
+  friend bool
+  operator<= (const Card &x, const Card &y)
+  {
+    return !(y < x);
+  }
+  friend bool
+  operator>= (const Card &x, const Card &y)
+  {
+    return !(x < y);
+  }
 
   u_int16_t value{};
   Type type{};
@@ -24,6 +51,6 @@ struct Card
 
 bool beats (Card const &cardToBeat, Card const &cardWhichTriesTobeat, Type trump);
 
-bool operator== (Card const &lhs, Card const &rhs);
+bool hasSameValue (Card const &x, Card const &y);
 
 #endif /* AE375AF6_DDFE_4D22_AD80_723EB970B8C7 */
