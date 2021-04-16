@@ -1,7 +1,9 @@
 #include "src/player.hxx"
+#include <pipes/dev_null.hpp>
+#include <pipes/pipes.hpp>
+#include <range/v3/range.hpp>
 #include <stdexcept>
 #include <string>
-
 void
 Player::putCards (std::vector<Card> const &cardsToPut, std::vector<std::pair<Card, std::optional<Card> > > &target)
 {
@@ -26,14 +28,24 @@ Player::getCards () const
 std::vector<Card>
 Player::cardsForIndex (std::vector<size_t> const &cardIndex) const
 {
-  auto cardsWithIndex = cards;
-  auto count = -1;
-  cardsWithIndex.erase (std::remove_if (cardsWithIndex.begin (), cardsWithIndex.end (),
-                                        [&count, &cardIndex] (auto) {
-                                          count++;
-                                          return std::find (cardIndex.begin (), cardIndex.end (), count) == cardIndex.end ();
-                                        }),
-                        cardsWithIndex.end ());
-  if (cardsWithIndex.size () != cardIndex.size ()) throw std::logic_error{ "cardsWithIndex.size() != cardIndex.size() " + std::to_string (cardsWithIndex.size ()) + " != " + std::to_string (cardIndex.size ()) };
-  return cardsWithIndex;
+  if (cardIndex.size () > cards.size ()) throw std::logic_error ("cardIndex.size() > cards.size ()" + std::to_string (cardIndex.size ()) + " != " + std::to_string (cards.size ()));
+  auto result = std::vector<Card>{};
+  pipes::mux (ranges::to<std::vector> (std::views::iota (size_t{}, cards.size ())), cards) >>= pipes::filter ([&cardIndex] (int i, auto) { return std::find (cardIndex.begin (), cardIndex.end (), i) != cardIndex.end (); }) >>= pipes::transform ([] (auto, auto &&card) { return card; }) >>= pipes::push_back (result);
+  if (cardIndex.size () != result.size ()) throw std::logic_error ("cardIndex.size() != result.size()" + std::to_string (cardIndex.size ()) + " != " + std::to_string (result.size ()));
+  return result;
+}
+
+bool
+Player::dropCard (Card const &card)
+{
+  auto cardItr = std::ranges::find (cards, card);
+  if (cardItr != cards.end ())
+    {
+      cards.erase (cardItr);
+      return true;
+    }
+  else
+    {
+      return false;
+    }
 }

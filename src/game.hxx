@@ -52,7 +52,7 @@ public:
 
   size_t cardsAllowedToPlaceOnTable () const;
 
-  size_t getRound ();
+  size_t getRound () const;
 
   Player const &getAttackingPlayer () const;
 
@@ -68,8 +68,12 @@ public:
 
   bool getAttackStarted () const;
 
+  std::optional<Player> durak () const;
+
 private:
   void nextRound (bool attackingSuccess);
+
+  bool checkIfGameIsOver () const;
 
   std::vector<Card> getTableAsVector ();
 
@@ -86,6 +90,7 @@ private:
   std::vector<std::pair<Card, std::optional<Card> > > table{};
   Type trump{};
   bool attackStarted = false;
+  bool gameOver = false;
   bool attackingPlayerPass = false;
   bool assistingPlayerPass = false;
   size_t round{ 1 };

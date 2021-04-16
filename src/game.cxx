@@ -7,6 +7,7 @@
 #include <pipes/pipes.hpp>
 #include <random>
 #include <range/v3/range.hpp>
+#include <stdexcept>
 
 std::vector<Card>
 generateCardDeck ()
@@ -162,8 +163,8 @@ Game::playerDefends (size_t indexFromCardOnTheTable, Card const &card)
   if (not table.at (indexFromCardOnTheTable).second && beats (cardToBeat, card, trump))
     {
       table.at (indexFromCardOnTheTable).second = card;
-      getAttackingPlayer ().putCards ({ card }, table);
-      if (getAttackingPlayer ().getCards ().empty ())
+      getDefendingPlayer ().dropCard ({ card });
+      if (getDefendingPlayer ().getCards ().empty ())
         {
           nextRound (false);
         }
@@ -263,14 +264,14 @@ Game::getTableAsVector ()
 void
 Game::calculateNextRoles (bool attackSuccess)
 {
-  players.erase (std::remove_if (players.begin (), players.end (), [] (Player const &player) { return player.getCards ().empty (); }), players.end ());
   if (attackSuccess)
     {
       std::rotate (players.begin (), players.begin () + 1, players.end ());
     }
   else
     {
-      std::rotate (players.begin (), players.begin () + 2, players.end ());
+      std::rotate (players.begin (), players.begin () + 1, players.end ());
+      std::rotate (players.begin (), players.begin () + 1, players.end ());
     }
 }
 
@@ -302,6 +303,7 @@ Game::drawCards ()
             }
         }
     }
+  players.erase (std::remove_if (players.begin (), players.end (), [] (auto const &player) { return player.getCards ().size () == 0; }));
 }
 
 void
@@ -313,6 +315,7 @@ Game::nextRound (bool attackingSuccess)
   rewokePass (PlayerRole::attack);
   rewokePass (PlayerRole::defend);
   drawCards ();
+  gameOver = checkIfGameIsOver ();
   calculateNextRoles (attackingSuccess);
 }
 
@@ -353,7 +356,7 @@ Game::getAttackingPlayer ()
 }
 
 size_t
-Game::getRound ()
+Game::getRound () const
 {
   return round;
 }
@@ -362,4 +365,24 @@ bool
 Game::getAttackStarted () const
 {
   return attackStarted;
+}
+
+bool
+Game::checkIfGameIsOver () const
+{
+  return players.size () <= 1;
+}
+
+std::optional<Player>
+Game::durak () const
+{
+  if (not checkIfGameIsOver ()) throw std::logic_error{ "calling durak and game is not over checkIfGameIsOver () == false" };
+  if (players.empty ())
+    {
+      return {};
+    }
+  else
+    {
+      return players.front ();
+    }
 }

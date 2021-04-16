@@ -99,6 +99,19 @@ TEST_CASE ("pass player beats all cards attack and def passes table gets cleared
   auto game = Game{ 2, testCardDeck () };
   game.playerStartsAttack ({ 2 });
   REQUIRE (game.countOfNotBeatenCardsOnTable () == 1);
+  REQUIRE (game.playerDefends (0, game.getDefendingPlayer ().getCards ().at (3)));
+  REQUIRE (game.countOfNotBeatenCardsOnTable () == 0);
+  game.pass (PlayerRole::attack);
+  game.pass (PlayerRole::assistAttacker);
+  REQUIRE (game.getTable ().size () == 0);
+  REQUIRE (game.getRound () == 2);
+}
+
+TEST_CASE ("try to play the game", "[game]")
+{
+  auto game = Game{ 2, testCardDeck () };
+  game.playerStartsAttack ({ 2 });
+  REQUIRE (game.countOfNotBeatenCardsOnTable () == 1);
   REQUIRE (game.playerDefends (0, game.getPlayers ().at (static_cast<size_t> (PlayerRole::defend)).getCards ().at (3)));
   REQUIRE (game.countOfNotBeatenCardsOnTable () == 0);
   game.pass (PlayerRole::attack);

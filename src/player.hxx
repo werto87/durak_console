@@ -10,6 +10,8 @@ struct Player
 public:
   void putCards (std::vector<Card> const &cardsToPut, std::vector<std::pair<Card, std::optional<Card> > > &target);
 
+  bool dropCard (Card const &card);
+
   void takeCards (std::vector<Card> &&cardsToTake);
 
   std::vector<Card> const &getCards () const;
