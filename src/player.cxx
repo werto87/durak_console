@@ -24,7 +24,7 @@ Player::getCards () const
 }
 
 std::vector<Card>
-Player::cardsForIndex (std::vector<size_t> const &cardIndex)
+Player::cardsForIndex (std::vector<size_t> const &cardIndex) const
 {
   auto cardsWithIndex = cards;
   auto count = -1;

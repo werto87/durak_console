@@ -67,7 +67,7 @@ Game::Game (size_t playerCount, std::vector<Card> &&cards) : cardDeck{ cards }, 
 void
 Game::pass (PlayerRole player)
 {
-  if (player == PlayerRole::attack)
+  if ((player == PlayerRole::attack) && attackStarted)
     {
       attackingPlayerPass = true;
     }
@@ -75,7 +75,7 @@ Game::pass (PlayerRole player)
     {
       assistingPlayerPass = true;
     }
-  if (attackingPlayerPass && assistingPlayerPass && getAttackingPlayer ().getCards ().empty ())
+  if (attackingPlayerPass && assistingPlayerPass && (countOfNotBeatenCardsOnTable () == 0))
     {
       nextRound (false);
     }
@@ -97,6 +97,7 @@ Game::rewokePass (PlayerRole player)
 bool
 Game::playerStartsAttack (std::vector<size_t> const &index)
 {
+
   if (cardsAllowedToPlaceOnTable () >= index.size ())
     {
       auto cards = getAttackingPlayer ().cardsForIndex (index);
@@ -107,6 +108,7 @@ Game::playerStartsAttack (std::vector<size_t> const &index)
             {
               pass (PlayerRole::attack);
             }
+          attackStarted = true;
           return true;
         }
       else
@@ -305,7 +307,9 @@ Game::drawCards ()
 void
 Game::nextRound (bool attackingSuccess)
 {
+  table.clear ();
   round++;
+  attackStarted = false;
   rewokePass (PlayerRole::attack);
   rewokePass (PlayerRole::defend);
   drawCards ();
@@ -352,4 +356,10 @@ size_t
 Game::getRound ()
 {
   return round;
+}
+
+bool
+Game::getAttackStarted () const
+{
+  return attackStarted;
 }

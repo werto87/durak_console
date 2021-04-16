@@ -14,7 +14,7 @@ public:
 
   std::vector<Card> const &getCards () const;
 
-  std::vector<Card> cardsForIndex (std::vector<size_t> const &cardIndex);
+  std::vector<Card> cardsForIndex (std::vector<size_t> const &cardIndex) const;
 
 private:
   std::vector<Card> cards{};

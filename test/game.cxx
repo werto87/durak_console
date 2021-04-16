@@ -85,4 +85,26 @@ TEST_CASE ("playerDefends value to low", "[game]")
   REQUIRE_FALSE (game.playerDefends (0, game.getPlayers ().at (static_cast<size_t> (PlayerRole::defend)).getCards ().at (5)));
 }
 
+TEST_CASE ("playerDefends player beats all cards", "[game]")
+{
+  auto game = Game{ 2, testCardDeck () };
+  game.playerStartsAttack ({ 2 });
+  REQUIRE (game.countOfNotBeatenCardsOnTable () == 1);
+  REQUIRE (game.playerDefends (0, game.getPlayers ().at (static_cast<size_t> (PlayerRole::defend)).getCards ().at (3)));
+  REQUIRE (game.countOfNotBeatenCardsOnTable () == 0);
+}
+
+TEST_CASE ("pass player beats all cards attack and def passes table gets cleared ", "[game]")
+{
+  auto game = Game{ 2, testCardDeck () };
+  game.playerStartsAttack ({ 2 });
+  REQUIRE (game.countOfNotBeatenCardsOnTable () == 1);
+  REQUIRE (game.playerDefends (0, game.getPlayers ().at (static_cast<size_t> (PlayerRole::defend)).getCards ().at (3)));
+  REQUIRE (game.countOfNotBeatenCardsOnTable () == 0);
+  game.pass (PlayerRole::attack);
+  game.pass (PlayerRole::assistAttacker);
+  REQUIRE (game.getTable ().size () == 0);
+  REQUIRE (game.getRound () == 2);
+}
+
 }

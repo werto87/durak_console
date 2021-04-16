@@ -66,6 +66,8 @@ public:
 
   Player &getDefendingPlayer ();
 
+  bool getAttackStarted () const;
+
 private:
   void nextRound (bool attackingSuccess);
 
@@ -83,6 +85,7 @@ private:
   std::vector<Player> players{};
   std::vector<std::pair<Card, std::optional<Card> > > table{};
   Type trump{};
+  bool attackStarted = false;
   bool attackingPlayerPass = false;
   bool assistingPlayerPass = false;
   size_t round{ 1 };
