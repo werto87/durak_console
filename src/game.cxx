@@ -184,8 +184,7 @@ Game::playerDefends (size_t indexFromCardOnTheTable, Card const &card)
 void
 Game::defendingPlayerTakesAllCardsFromTheTable ()
 {
-  getAttackingPlayer ().takeCards (getTableAsVector ());
-  table.clear ();
+  getDefendingPlayer ().takeCards (getTableAsVector ());
   nextRound (true);
 }
 
@@ -267,10 +266,10 @@ Game::calculateNextRoles (bool attackSuccess)
   if (attackSuccess)
     {
       std::rotate (players.begin (), players.begin () + 1, players.end ());
+      std::rotate (players.begin (), players.begin () + 1, players.end ());
     }
   else
     {
-      std::rotate (players.begin (), players.begin () + 1, players.end ());
       std::rotate (players.begin (), players.begin () + 1, players.end ());
     }
 }
@@ -303,7 +302,7 @@ Game::drawCards ()
             }
         }
     }
-  players.erase (std::remove_if (players.begin (), players.end (), [] (auto const &player) { return player.getCards ().size () == 0; }));
+  players.erase (std::remove_if (players.begin (), players.end (), [] (auto const &player) { return player.getCards ().size () == 0; }), players.end ());
 }
 
 void

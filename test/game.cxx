@@ -111,13 +111,19 @@ TEST_CASE ("try to play the game", "[game]")
 {
   auto game = Game{ 2, testCardDeck () };
   game.playerStartsAttack ({ 2 });
-  REQUIRE (game.countOfNotBeatenCardsOnTable () == 1);
-  REQUIRE (game.playerDefends (0, game.getPlayers ().at (static_cast<size_t> (PlayerRole::defend)).getCards ().at (3)));
-  REQUIRE (game.countOfNotBeatenCardsOnTable () == 0);
+  game.countOfNotBeatenCardsOnTable ();
+  game.playerDefends (0, game.getDefendingPlayer ().getCards ().at (3));
+  game.countOfNotBeatenCardsOnTable ();
   game.pass (PlayerRole::attack);
   game.pass (PlayerRole::assistAttacker);
-  REQUIRE (game.getTable ().size () == 0);
-  REQUIRE (game.getRound () == 2);
+  game.getTable ().size ();
+  game.getRound ();
+  while (not game.checkIfGameIsOver ())
+    {
+      game.playerStartsAttack ({ 0 });
+      game.defendingPlayerTakesAllCardsFromTheTable ();
+    }
+  REQUIRE (game.durak ());
 }
 
 }

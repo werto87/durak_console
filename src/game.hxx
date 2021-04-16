@@ -70,10 +70,10 @@ public:
 
   std::optional<Player> durak () const;
 
+  bool checkIfGameIsOver () const;
+
 private:
   void nextRound (bool attackingSuccess);
-
-  bool checkIfGameIsOver () const;
 
   std::vector<Card> getTableAsVector ();
 
