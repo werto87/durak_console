@@ -54,11 +54,17 @@ public:
 
   size_t getRound ();
 
-  Player getAttackingPlayer () const;
+  Player const &getAttackingPlayer () const;
 
-  Player getAssistingPlayer () const;
+  Player const &getAssistingPlayer () const;
 
-  Player getDefendingPlayer () const;
+  Player const &getDefendingPlayer () const;
+
+  Player &getAttackingPlayer ();
+
+  Player &getAssistingPlayer ();
+
+  Player &getDefendingPlayer ();
 
 private:
   void nextRound (bool attackingSuccess);

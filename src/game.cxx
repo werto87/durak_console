@@ -99,11 +99,11 @@ Game::playerStartsAttack (std::vector<size_t> const &index)
 {
   if (cardsAllowedToPlaceOnTable () >= index.size ())
     {
-      auto cards = getDefendingPlayer ().cardsForIndex (index);
+      auto cards = getAttackingPlayer ().cardsForIndex (index);
       if (cardsHaveSameValue (cards))
         {
-          getDefendingPlayer ().putCards (cards, table);
-          if (getDefendingPlayer ().getCards ().empty ())
+          getAttackingPlayer ().putCards (cards, table);
+          if (getAttackingPlayer ().getCards ().empty ())
             {
               pass (PlayerRole::attack);
             }
@@ -123,7 +123,7 @@ Game::playerStartsAttack (std::vector<size_t> const &index)
 bool
 Game::playerAssists (PlayerRole player, std::vector<size_t> const &index)
 {
-  auto cards = getDefendingPlayer ().cardsForIndex (index);
+  auto cards = players.at (static_cast<size_t> (player)).cardsForIndex (index);
   auto result = false;
   if (player == PlayerRole::attack || player == PlayerRole::assistAttacker)
     {
@@ -312,22 +312,40 @@ Game::nextRound (bool attackingSuccess)
   calculateNextRoles (attackingSuccess);
 }
 
-Player
+Player const &
 Game::getDefendingPlayer () const
 {
-  return players.at (static_cast<size_t> (PlayerRole::attack));
+  return players.at (static_cast<size_t> (PlayerRole::defend));
 }
 
-Player
+Player const &
 Game::getAssistingPlayer () const
 {
   return players.at (static_cast<size_t> (PlayerRole::assistAttacker));
 }
 
-Player
+Player const &
 Game::getAttackingPlayer () const
 {
+  return players.at (static_cast<size_t> (PlayerRole::attack));
+}
+
+Player &
+Game::getDefendingPlayer ()
+{
   return players.at (static_cast<size_t> (PlayerRole::defend));
+}
+
+Player &
+Game::getAssistingPlayer ()
+{
+  return players.at (static_cast<size_t> (PlayerRole::assistAttacker));
+}
+
+Player &
+Game::getAttackingPlayer ()
+{
+  return players.at (static_cast<size_t> (PlayerRole::attack));
 }
 
 size_t
