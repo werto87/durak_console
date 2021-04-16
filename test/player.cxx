@@ -140,4 +140,19 @@ TEST_CASE ("lowest card and trump gets only beaten by other trump cards", "[beat
   REQUIRE (cardDeck.empty ());
 }
 
+TEST_CASE ("cardsForIndex", "[cardsForIndex]")
+{
+  auto player = Player{};
+  player.takeCards ({ { .value = 1, .type = Type::clubs }, { .value = 1, .type = Type::diamonds }, { .value = 2, .type = Type::clubs }, { .value = 2, .type = Type::diamonds }, { .value = 3, .type = Type::spades }, { .value = 4, .type = Type::clubs } });
+  auto cards = player.cardsForIndex ({ 0, 1, 2 });
+  REQUIRE (cards == std::vector<Card>{ { .value = 1, .type = Type::clubs }, { .value = 1, .type = Type::diamonds }, { .value = 2, .type = Type::clubs } });
+}
+
+TEST_CASE ("cardsForIndex out of bound", "[cardsForIndex]")
+{
+  auto player = Player{};
+  player.takeCards ({ { .value = 1, .type = Type::clubs }, { .value = 1, .type = Type::diamonds }, { .value = 2, .type = Type::clubs }, { .value = 2, .type = Type::diamonds }, { .value = 3, .type = Type::spades }, { .value = 4, .type = Type::clubs } });
+  REQUIRE_THROWS (player.cardsForIndex ({ 41, 1, 2 }));
+}
+
 }

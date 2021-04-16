@@ -35,3 +35,9 @@ hasSameValue (Card const &x, Card const &y)
 {
   return x.value == y.value;
 }
+
+bool
+cardsHaveSameValue (std::vector<Card> const &cards)
+{
+  return std::find_if (cards.begin (), cards.end (), [valueToCompare = cards.front ().value] (Card const &card) { return valueToCompare != card.value; }) == cards.end ();
+}

@@ -2,7 +2,12 @@
 #include "src/card.hxx"
 #include "src/player.hxx"
 #include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <pipes/pipes.hpp>
 #include <random>
+#include <range/v3/range.hpp>
+
 std::vector<Card>
 generateCardDeck ()
 {
@@ -47,37 +52,43 @@ drawSpecificCard (std::vector<Card> &cardDeck, Card const &cardToDraw)
   return result;
 }
 
-Game::Game (u_int16_t playerCount) : cardDeck{ generateCardDeck () }, players (playerCount)
+Game::Game (size_t playerCount) : cardDeck{ generateCardDeck () }, players (playerCount)
 {
   trump = cardDeck.back ().type;
-  std::for_each (players.begin (), players.end (), [this] (Player &player) { playerDrawsCardsFromDeck (player, 6); });
+  std::for_each (players.begin (), players.end (), [this] (Player &player) { playerDrawsCardsFromDeck (player, numberOfCardsPlayerShouldHave); });
+}
+
+Game::Game (size_t playerCount, std::vector<Card> &&cards) : cardDeck{ cards }, players (playerCount)
+{
+  trump = cardDeck.back ().type;
+  std::for_each (players.begin (), players.end (), [this] (Player &player) { playerDrawsCardsFromDeck (player, numberOfCardsPlayerShouldHave); });
 }
 
 void
-Game::pass (u_int16_t player)
+Game::pass (PlayerRole player)
 {
-  if (player == attack)
+  if (player == PlayerRole::attack)
     {
       attackingPlayerPass = true;
     }
-  else if (player == assistAttacker)
+  else if (player == PlayerRole::assistAttacker)
     {
       assistingPlayerPass = true;
     }
-  if (attackingPlayerPass && assistingPlayerPass && players.at (defend).getCards ().empty ())
+  if (attackingPlayerPass && assistingPlayerPass && getAttackingPlayer ().getCards ().empty ())
     {
       nextRound (false);
     }
 }
 
 void
-Game::rewokePass (u_int16_t player)
+Game::rewokePass (PlayerRole player)
 {
-  if (player == attack)
+  if (player == PlayerRole::attack)
     {
       attackingPlayerPass = false;
     }
-  else if (player == assistAttacker)
+  else if (player == PlayerRole::assistAttacker)
     {
       assistingPlayerPass = false;
     }
@@ -86,45 +97,54 @@ Game::rewokePass (u_int16_t player)
 bool
 Game::playerStartsAttack (std::vector<size_t> const &index)
 {
-  auto cards = players.at (attack).getCards ();
-  cards.erase (std::remove_if (cards.begin (), cards.end (), [i = int{}, index] (auto) mutable {
-    auto test = std::find (index.begin (), index.end (), i);
-    i++;
-    return test == index.end ();
-  }));
-  auto valueToCompare = cards.front ().value;
-  if (std::find_if (cards.begin (), cards.end (), [valueToCompare] (Card const &card) { return valueToCompare != card.value; }) == cards.end ())
+  if (cardsAllowedToPlaceOnTable () >= index.size ())
     {
-      players.at (attack).putCards (cards, table);
-      if (players.at (attack).getCards ().empty ())
+      auto cards = getDefendingPlayer ().cardsForIndex (index);
+      if (cardsHaveSameValue (cards))
         {
-          pass (attack);
+          getDefendingPlayer ().putCards (cards, table);
+          if (getDefendingPlayer ().getCards ().empty ())
+            {
+              pass (PlayerRole::attack);
+            }
+          return true;
         }
-      return true;
+      else
+        {
+          return false;
+        }
     }
-  return false;
+  else
+    {
+      return false;
+    }
 }
 
 bool
-Game::playerAssists (u_int16_t player, std::vector<size_t> const &index)
+Game::playerAssists (PlayerRole player, std::vector<size_t> const &index)
 {
-  auto cards = players.at (attack).getCards ();
-  cards.erase (std::remove_if (cards.begin (), cards.end (), [i = int{}, index] (auto) mutable {
-    auto test = std::find (index.begin (), index.end (), i);
-    i++;
-    return test == index.end ();
-  }));
+  auto cards = getDefendingPlayer ().cardsForIndex (index);
   auto result = false;
-  if (player == attack || player == assistAttacker)
+  if (player == PlayerRole::attack || player == PlayerRole::assistAttacker)
     {
       auto tableVector = getTableAsVector ();
-      std::sort (tableVector.begin (), tableVector.end ());
-      std::sort (cards.begin (), cards.end ());
-      if (std::includes (tableVector.begin (), tableVector.end (), cards.begin (), cards.end ()))
+      auto sortByValue = [] (auto const &x, auto const &y) { return x.value > y.value; };
+      std::sort (tableVector.begin (), tableVector.end (), sortByValue);
+      tableVector.erase (std::unique (tableVector.begin (), tableVector.end (), sortByValue), tableVector.end ());
+      auto isAllowedToPutCards = true;
+      for (auto const &card : cards)
+        {
+          if (not std::binary_search (tableVector.begin (), tableVector.end (), card, sortByValue))
+            {
+              isAllowedToPutCards = false;
+              break;
+            }
+        }
+      if (isAllowedToPutCards)
         {
           result = true;
-          players.at (player).putCards (cards, table);
-          if (players.at (player).getCards ().empty ())
+          players.at (static_cast<size_t> (player)).putCards (cards, table);
+          if (players.at (static_cast<size_t> (player)).getCards ().empty ())
             {
               pass (player);
             }
@@ -134,21 +154,21 @@ Game::playerAssists (u_int16_t player, std::vector<size_t> const &index)
 }
 
 bool
-Game::playerDefends (u_int16_t indexFromCardOnTheTable, Card &&card)
+Game::playerDefends (size_t indexFromCardOnTheTable, Card const &card)
 {
   auto cardToBeat = table.at (indexFromCardOnTheTable).first;
   if (not table.at (indexFromCardOnTheTable).second && beats (cardToBeat, card, trump))
     {
       table.at (indexFromCardOnTheTable).second = card;
-      players.at (defend).putCards ({ card }, table);
-      if (players.at (defend).getCards ().empty ())
+      getAttackingPlayer ().putCards ({ card }, table);
+      if (getAttackingPlayer ().getCards ().empty ())
         {
           nextRound (false);
         }
       else
         {
-          rewokePass (attack);
-          rewokePass (defend);
+          rewokePass (PlayerRole::attack);
+          rewokePass (PlayerRole::defend);
         }
       return true;
     }
@@ -161,13 +181,13 @@ Game::playerDefends (u_int16_t indexFromCardOnTheTable, Card &&card)
 void
 Game::defendingPlayerTakesAllCardsFromTheTable ()
 {
-  players.at (defend).takeCards (getTableAsVector ());
+  getAttackingPlayer ().takeCards (getTableAsVector ());
   table.clear ();
   nextRound (true);
 }
 
 void
-Game::playerDrawsCardsFromDeck (Player &player, u_int16_t numberOfCards)
+Game::playerDrawsCardsFromDeck (Player &player, size_t numberOfCards)
 {
   auto result = std::vector<Card>{};
   for (size_t i = 0; i < numberOfCards; i++)
@@ -201,6 +221,26 @@ std::vector<std::pair<Card, std::optional<Card> > > const &
 Game::getTable () const
 {
   return table;
+}
+
+size_t
+Game::countOfNotBeatenCardsOnTable () const
+{
+  return std::accumulate (table.begin (), table.end (), size_t{ 0 }, [] (auto const &x, std::pair<Card, std::optional<Card> > const &y) { return x + (y.second.has_value () ? 0 : 1); });
+}
+
+std::vector<std::pair<size_t, Card> >
+Game::cardsNotBeatenOnTableWithIndex () const
+{
+  auto results = std::vector<std::pair<size_t, Card> >{};
+  pipes::mux (ranges::to<std::vector> (std::views::iota (size_t{}, getTable ().size ())), getTable ()) >>= pipes::filter ([] (int, std::pair<Card, std::optional<Card> > b) { return not b.second.has_value (); }) >>= pipes::transform ([] (int a, std::pair<Card, std::optional<Card> > b) { return std::make_pair (a, b.first); }) >>= pipes::push_back (results);
+  return results;
+}
+
+size_t
+Game::cardsAllowedToPlaceOnTable () const
+{
+  return getAttackingPlayer ().getCards ().size () - countOfNotBeatenCardsOnTable ();
 }
 
 std::vector<Card>
@@ -237,26 +277,26 @@ Game::drawCards ()
 {
   if (players.size () >= 3)
     {
-      if (((6 - players.at (attack).getCards ().size ()) > 0))
+      if (getDefendingPlayer ().getCards ().size () < numberOfCardsPlayerShouldHave)
         {
-          playerDrawsCardsFromDeck (players.at (0), 6u - static_cast<u_int16_t> (players.at (0).getCards ().size ()));
+          playerDrawsCardsFromDeck (players.at (static_cast<size_t> (PlayerRole::defend)), numberOfCardsPlayerShouldHave - getDefendingPlayer ().getCards ().size ());
         }
-      if (((6 - players.at (assistAttacker).getCards ().size ()) > 0))
+      if (getAssistingPlayer ().getCards ().size () < numberOfCardsPlayerShouldHave)
         {
-          playerDrawsCardsFromDeck (players.at (2), 6u - static_cast<u_int16_t> (players.at (2).getCards ().size ()));
+          playerDrawsCardsFromDeck (players.at (static_cast<size_t> (PlayerRole::assistAttacker)), numberOfCardsPlayerShouldHave - getAssistingPlayer ().getCards ().size ());
         }
-      if (((6 - players.at (defend).getCards ().size ()) > 0))
+      if (getAttackingPlayer ().getCards ().size () < numberOfCardsPlayerShouldHave)
         {
-          playerDrawsCardsFromDeck (players.at (1), 6u - static_cast<u_int16_t> (players.at (1).getCards ().size ()));
+          playerDrawsCardsFromDeck (players.at (static_cast<size_t> (PlayerRole::attack)), numberOfCardsPlayerShouldHave - getAttackingPlayer ().getCards ().size ());
         }
     }
   if (players.size () == 2)
     {
       for (auto &player : players)
         {
-          if (((6 - player.getCards ().size ()) > 0))
+          if (player.getCards ().size () < numberOfCardsPlayerShouldHave)
             {
-              playerDrawsCardsFromDeck (player, 6u - static_cast<u_int16_t> (player.getCards ().size ()));
+              playerDrawsCardsFromDeck (player, numberOfCardsPlayerShouldHave - player.getCards ().size ());
             }
         }
     }
@@ -265,8 +305,33 @@ Game::drawCards ()
 void
 Game::nextRound (bool attackingSuccess)
 {
-  rewokePass (attack);
-  rewokePass (defend);
+  round++;
+  rewokePass (PlayerRole::attack);
+  rewokePass (PlayerRole::defend);
   drawCards ();
   calculateNextRoles (attackingSuccess);
+}
+
+Player
+Game::getDefendingPlayer () const
+{
+  return players.at (static_cast<size_t> (PlayerRole::attack));
+}
+
+Player
+Game::getAssistingPlayer () const
+{
+  return players.at (static_cast<size_t> (PlayerRole::assistAttacker));
+}
+
+Player
+Game::getAttackingPlayer () const
+{
+  return players.at (static_cast<size_t> (PlayerRole::defend));
+}
+
+size_t
+Game::getRound ()
+{
+  return round;
 }

@@ -53,4 +53,6 @@ bool beats (Card const &cardToBeat, Card const &cardWhichTriesTobeat, Type trump
 
 bool hasSameValue (Card const &x, Card const &y);
 
+bool cardsHaveSameValue (std::vector<Card> const &cards);
+
 #endif /* AE375AF6_DDFE_4D22_AD80_723EB970B8C7 */

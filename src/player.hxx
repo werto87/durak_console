@@ -1,8 +1,10 @@
 #ifndef A85D1720_A39F_43B7_B56C_7843E3A02A0D
 #define A85D1720_A39F_43B7_B56C_7843E3A02A0D
 #include "src/card.hxx"
+#include <algorithm>
+#include <cstddef>
+#include <sys/types.h>
 #include <vector>
-
 struct Player
 {
 public:
@@ -11,6 +13,8 @@ public:
   void takeCards (std::vector<Card> &&cardsToTake);
 
   std::vector<Card> const &getCards () const;
+
+  std::vector<Card> cardsForIndex (std::vector<size_t> const &cardIndex);
 
 private:
   std::vector<Card> cards{};

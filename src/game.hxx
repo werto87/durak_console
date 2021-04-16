@@ -2,31 +2,43 @@
 #define B3662CAA_D812_46F7_8DD7_C85FCFAC47A4
 
 #include "src/player.hxx"
+#include <algorithm>
+#include <boost/assign.hpp>
+#include <boost/range/adaptor/indexed.hpp>
+#include <cstddef>
+#include <iostream>
+#include <iterator>
+#include <numeric>
+#include <pipes/pipes.hpp>
+#include <sys/types.h>
+#include <vector>
+
+enum struct PlayerRole
+{
+  attack,
+  defend,
+  assistAttacker
+};
 
 class Game
 {
 public:
-  Game (u_int16_t playerCount);
+  Game (size_t playerCount);
 
-  enum PlayerRole
-  {
-    attack,
-    defend,
-    assistAttacker
-  };
+  Game (size_t playerCount, std::vector<Card> &&cards);
 
-  void pass (u_int16_t player);
+  void pass (PlayerRole playerRole);
 
-  void rewokePass (u_int16_t player);
+  void rewokePass (PlayerRole playerRole);
 
   // attack starts round and can only be used by playr with role attack
   bool playerStartsAttack (std::vector<size_t> const &index);
 
   // after attack is started player with role attack and assistAttacker can add cards with same value which are allready on the table
-  bool playerAssists (u_int16_t player, std::vector<size_t> const &index);
+  bool playerAssists (PlayerRole playerRole, std::vector<size_t> const &index);
 
   // defending player can try to beat card on the table
-  bool playerDefends (u_int16_t indexFromCardOnTheTable, Card &&card);
+  bool playerDefends (size_t indexFromCardOnTheTable, Card const &card);
 
   void defendingPlayerTakesAllCardsFromTheTable ();
 
@@ -34,15 +46,26 @@ public:
 
   std::vector<std::pair<Card, std::optional<Card> > > const &getTable () const;
 
-  // if defending player has no cards round finishes and table gets flushed
-  // if cards are on the table defending player can take them and the round finishes
-  // If attacking and assisting player waits and all cards on the table are beaten round finishes and talbe gets flushed
-  void nextRound (bool attackingSuccess);
+  size_t countOfNotBeatenCardsOnTable () const;
+
+  std::vector<std::pair<size_t, Card> > cardsNotBeatenOnTableWithIndex () const;
+
+  size_t cardsAllowedToPlaceOnTable () const;
+
+  size_t getRound ();
+
+  Player getAttackingPlayer () const;
+
+  Player getAssistingPlayer () const;
+
+  Player getDefendingPlayer () const;
 
 private:
+  void nextRound (bool attackingSuccess);
+
   std::vector<Card> getTableAsVector ();
 
-  void playerDrawsCardsFromDeck (Player &player, u_int16_t numberOfCards);
+  void playerDrawsCardsFromDeck (Player &player, size_t numberOfCards);
 
   void playerDrawsCardsFromTable (Player &player);
 
@@ -56,6 +79,8 @@ private:
   Type trump{};
   bool attackingPlayerPass = false;
   bool assistingPlayerPass = false;
+  size_t round{ 1 };
+  size_t numberOfCardsPlayerShouldHave{ 6 };
 };
 
 std::vector<Card> generateCardDeck ();

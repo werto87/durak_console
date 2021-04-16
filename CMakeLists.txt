@@ -1,5 +1,5 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld -fcoroutines")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fcoroutines")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g -fuse-ld=lld -fcoroutines")
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fcoroutines -v")
 cmake_minimum_required(VERSION 3.17)
 project(project VERSION 1.0.0
@@ -7,8 +7,6 @@ project(project VERSION 1.0.0
   LANGUAGES CXX
   ) 
 cmake_policy(SET CMP0015 NEW)
-
-
 
 
 ########## enable cache system
@@ -59,6 +57,8 @@ target_include_directories(${TARGET_NAME} PRIVATE
 target_link_libraries(${TARGET_NAME} PRIVATE
 ${PROJECT_WARNINGS}
 ${PROJECT_OPTIONS}
+CONAN_PKG::range-v3
+CONAN_PKG::pipes
 CONAN_PKG::magic_enum
 )
 
