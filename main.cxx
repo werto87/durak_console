@@ -1,13 +1,12 @@
 #include "src/card.hxx"
 #include "src/game.hxx"
+#include "src/print.hxx"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
-//#include <magic_enum.hpp>
-#include "src/print.hxx"
 #include <map>
 #include <random>
 #include <string>
@@ -16,7 +15,6 @@
 int
 main ()
 {
-
   int playerCount = 0;
   std::cout << "Input Player Count: ";
   std::cin >> playerCount;
@@ -37,25 +35,47 @@ main ()
       if (game.getAttackStarted ())
         {
           std::cout << tableAsString (game);
-        }
-      std::cout << attackingPlayerWithNameAndCardIndexValueAndType (game);
-      std::cout << "Attacking Player select Card by index to attack: ";
-      std::cin >> playerSelection;
-      if (game.getAttackStarted ())
-        {
-          game.playerAssists (PlayerRole::attack, { std::stoull (playerSelection) });
+          std::cout << attackingPlayerWithNameAndCardIndexValueAndType (game);
+          std::cout << "Attacking Player select Card to support or 'p' to pass: ";
+          std::cin >> playerSelection;
+          if (playerSelection.at (0) == 'p')
+            {
+              if (game.pass (PlayerRole::attack))
+                {
+                  // if pass was successfull round is over
+                  continue;
+                }
+            }
+          else
+            {
+              game.playerAssists (PlayerRole::attack, { std::stoull (playerSelection) });
+            }
         }
       else
         {
+          std::cout << attackingPlayerWithNameAndCardIndexValueAndType (game);
+          std::cout << "Attacking Player select Card by index to attack: ";
+          std::cin >> playerSelection;
           game.playerStartsAttack ({ std::stoull (playerSelection) });
         }
-
       std::cout << tableAsString (game);
       std::cout << defendingPlayerWithNameAndCardIndexValueAndType (game);
       std::cout << "Defending Player select Card to beat by index to defend or type 'd' to draw the cards from table: ";
       std::cin >> playerSelection;
       if (playerSelection.at (0) == 'd')
         {
+          std::cout << tableAsString (game);
+          std::cout << attackingPlayerWithNameAndCardIndexValueAndType (game);
+          std::cout << "Defending Player takes Cards from table you can add cards with index or press 'p' to pass: ";
+          std::cin >> playerSelection;
+          if (playerSelection.at (0) == 'p')
+            {
+              game.pass (PlayerRole::attack);
+            }
+          else
+            {
+              game.playerAssists (PlayerRole::attack, { std::stoull (playerSelection) });
+            }
           game.defendingPlayerTakesAllCardsFromTheTable ();
         }
       else
@@ -65,6 +85,14 @@ main ()
           std::cin >> playerSelection;
           game.playerDefends (cardToBeatOnTableIndex, game.getDefendingPlayer ().getCards ().at (std::stoull (playerSelection)));
         }
+    }
+  if (auto durak = game.durak ())
+    {
+      std::cout << "durak: " << durak.value ().id << std::endl;
+    }
+  else
+    {
+      std::cout << "tie" << std::endl;
     }
   return 0;
 }

@@ -27,11 +27,12 @@ public:
 
   Game (std::vector<std::string> &&playerNames, std::vector<Card> &&cards);
 
-  void pass (PlayerRole playerRole);
+  bool pass (PlayerRole playerRole);
 
   void rewokePass (PlayerRole playerRole);
 
   // TODO play cards should work with cards an not with index
+  // TODO player attack assists and defends could throw an exception if something is wrong and client code could catch it print it and asks for intput and try it again
 
   // attack starts round and can only be used by playr with role attack
   bool playerStartsAttack (std::vector<size_t> const &index);

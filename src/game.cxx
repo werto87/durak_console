@@ -34,7 +34,7 @@ Game::Game (std::vector<std::string> &&playerNames, std::vector<Card> &&cards) :
   std::for_each (players.begin (), players.end (), [this] (Player &player) { playerDrawsCardsFromDeck (player, numberOfCardsPlayerShouldHave); });
 }
 
-void
+bool
 Game::pass (PlayerRole player)
 {
   if ((player == PlayerRole::attack) && attackStarted)
@@ -45,10 +45,12 @@ Game::pass (PlayerRole player)
     {
       assistingPlayerPass = true;
     }
-  if (attackingPlayerPass && assistingPlayerPass && (countOfNotBeatenCardsOnTable () == 0))
+  if (((players.size () == 2) && attackingPlayerPass && (countOfNotBeatenCardsOnTable () == 0)) || (attackingPlayerPass && assistingPlayerPass && (countOfNotBeatenCardsOnTable () == 0)))
     {
       nextRound (false);
+      return true;
     }
+  return false;
 }
 
 void
@@ -131,6 +133,10 @@ Game::playerAssists (PlayerRole player, std::vector<size_t> const &index)
 bool
 Game::playerDefends (size_t indexFromCardOnTheTable, Card const &card)
 {
+  if (table.size () <= indexFromCardOnTheTable)
+    {
+      return false;
+    }
   auto cardToBeat = table.at (indexFromCardOnTheTable).first;
   if (not table.at (indexFromCardOnTheTable).second && beats (cardToBeat, card, trump))
     {
