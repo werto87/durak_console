@@ -60,6 +60,7 @@ ${PROJECT_OPTIONS}
 CONAN_PKG::range-v3
 CONAN_PKG::pipes
 CONAN_PKG::magic_enum
+CONAN_PKG::fmt
 )
 
 ####### create executable

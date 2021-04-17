@@ -5,4 +5,6 @@
  "game.cxx"
  "player.hxx"
  "player.cxx"
+ "print.hxx"
+ "print.cxx"
  )

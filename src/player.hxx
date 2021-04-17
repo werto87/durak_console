@@ -18,6 +18,8 @@ public:
 
   std::vector<Card> cardsForIndex (std::vector<size_t> const &cardIndex) const;
 
+  std::string id{};
+
 private:
   std::vector<Card> cards{};
 };

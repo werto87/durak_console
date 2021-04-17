@@ -4,64 +4,33 @@
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
+#include <iterator>
 #include <pipes/pipes.hpp>
 #include <random>
 #include <range/v3/range.hpp>
 #include <stdexcept>
 
-std::vector<Card>
-generateCardDeck ()
+Game::Game (std::vector<std::string> &&playerNames) : cardDeck{ generateCardDeck () }
 {
-  const size_t cardValueMax = 9;
-  std::vector<Card> cardDeck{};
-  for (u_int16_t type = 0; type <= 3; type++)
-    {
-      for (u_int16_t cardValue = 1; cardValue <= cardValueMax; cardValue++)
-        {
-          cardDeck.push_back (Card{ .value = cardValue, .type = static_cast<Type> (type) });
-        }
-    }
-  static std::random_device rd;
-  static std::mt19937 g (rd ());
-  std::shuffle (cardDeck.begin (), cardDeck.end (), g);
-  return cardDeck;
-}
-
-std::optional<Card>
-drawCard (std::vector<Card> &cardDeck)
-{
-  std::optional<Card> card{};
-  if (!cardDeck.empty ())
-    {
-      card = std::move (cardDeck.back ());
-      cardDeck.pop_back ();
-    }
-  return card;
-}
-
-std::optional<Card>
-drawSpecificCard (std::vector<Card> &cardDeck, Card const &cardToDraw)
-{
-  auto result = std::optional<Card>{};
-  // try to find and if found return it and remove it from cardDeck
-  auto card = std::find (cardDeck.begin (), cardDeck.end (), cardToDraw);
-  if (card != cardDeck.end ())
-    {
-      result = std::move (*card);
-      cardDeck.erase (card);
-    }
-  return result;
-}
-
-Game::Game (size_t playerCount) : cardDeck{ generateCardDeck () }, players (playerCount)
-{
-  trump = cardDeck.back ().type;
+  trump = cardDeck.front ().type;
+  // TODO use move itterator
+  std::transform (playerNames.begin (), playerNames.end (), std::back_inserter (players), [] (auto playername) {
+    auto player = Player{};
+    player.id.swap (playername);
+    return player;
+  });
   std::for_each (players.begin (), players.end (), [this] (Player &player) { playerDrawsCardsFromDeck (player, numberOfCardsPlayerShouldHave); });
 }
 
-Game::Game (size_t playerCount, std::vector<Card> &&cards) : cardDeck{ cards }, players (playerCount)
+Game::Game (std::vector<std::string> &&playerNames, std::vector<Card> &&cards) : cardDeck{ cards }
 {
-  trump = cardDeck.back ().type;
+  trump = cardDeck.front ().type;
+  // TODO use move itterator
+  std::transform (playerNames.begin (), playerNames.end (), std::back_inserter (players), [] (auto playername) {
+    auto player = Player{};
+    player.id.swap (playername);
+    return player;
+  });
   std::for_each (players.begin (), players.end (), [this] (Player &player) { playerDrawsCardsFromDeck (player, numberOfCardsPlayerShouldHave); });
 }
 
@@ -130,11 +99,14 @@ Game::playerAssists (PlayerRole player, std::vector<size_t> const &index)
   auto result = false;
   if (player == PlayerRole::attack || player == PlayerRole::assistAttacker)
     {
+
       auto tableVector = getTableAsVector ();
       auto sortByValue = [] (auto const &x, auto const &y) { return x.value > y.value; };
       std::sort (tableVector.begin (), tableVector.end (), sortByValue);
-      tableVector.erase (std::unique (tableVector.begin (), tableVector.end (), sortByValue), tableVector.end ());
+      auto equal = [] (auto const &x, auto const &y) { return x.value == y.value; };
+      tableVector.erase (std::unique (tableVector.begin (), tableVector.end (), equal), tableVector.end ());
       auto isAllowedToPutCards = true;
+
       for (auto const &card : cards)
         {
           if (not std::binary_search (tableVector.begin (), tableVector.end (), card, sortByValue))
@@ -242,7 +214,7 @@ Game::cardsNotBeatenOnTableWithIndex () const
 size_t
 Game::cardsAllowedToPlaceOnTable () const
 {
-  return getAttackingPlayer ().getCards ().size () - countOfNotBeatenCardsOnTable ();
+  return getDefendingPlayer ().getCards ().size () - countOfNotBeatenCardsOnTable ();
 }
 
 std::vector<Card>
@@ -384,4 +356,48 @@ Game::durak () const
     {
       return players.front ();
     }
+}
+
+std::vector<Card>
+generateCardDeck ()
+{
+  const size_t cardValueMax = 9;
+  std::vector<Card> cardDeck{};
+  for (u_int16_t type = 0; type <= 3; type++)
+    {
+      for (u_int16_t cardValue = 1; cardValue <= cardValueMax; cardValue++)
+        {
+          cardDeck.push_back (Card{ .value = cardValue, .type = static_cast<Type> (type) });
+        }
+    }
+  static std::random_device rd;
+  static std::mt19937 g (rd ());
+  std::shuffle (cardDeck.begin (), cardDeck.end (), g);
+  return cardDeck;
+}
+
+std::optional<Card>
+drawCard (std::vector<Card> &cardDeck)
+{
+  std::optional<Card> card{};
+  if (!cardDeck.empty ())
+    {
+      card = std::move (cardDeck.back ());
+      cardDeck.pop_back ();
+    }
+  return card;
+}
+
+std::optional<Card>
+drawSpecificCard (std::vector<Card> &cardDeck, Card const &cardToDraw)
+{
+  auto result = std::optional<Card>{};
+  // try to find and if found return it and remove it from cardDeck
+  auto card = std::find (cardDeck.begin (), cardDeck.end (), cardToDraw);
+  if (card != cardDeck.end ())
+    {
+      result = std::move (*card);
+      cardDeck.erase (card);
+    }
+  return result;
 }

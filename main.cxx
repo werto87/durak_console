@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iterator>
 //#include <magic_enum.hpp>
+#include "src/print.hxx"
 #include <map>
 #include <random>
 #include <string>
@@ -15,14 +16,55 @@
 int
 main ()
 {
-  auto game = Game{ 2, std::vector<Card>{ { 7, Type::clubs }, { 8, Type::clubs }, { 3, Type::hearts }, { 3, Type::clubs }, { 2, Type::diamonds }, { 3, Type::diamonds }, { 2, Type::clubs }, { 5, Type::diamonds }, { 6, Type::diamonds }, { 7, Type::diamonds }, { 8, Type::diamonds }, { 9, Type::diamonds }, { 1, Type::spades }, { 2, Type::spades }, { 3, Type::spades }, { 1, Type::diamonds }, { 5, Type::spades }, { 6, Type::spades }, { 7, Type::spades }, { 8, Type::spades }, { 9, Type::spades }, { 1, Type::hearts }, { 2, Type::hearts }, { 9, Type::clubs }, { 1, Type::clubs }, { 5, Type::hearts }, { 6, Type::clubs }, { 7, Type::hearts }, { 8, Type::hearts }, { 9, Type::hearts }, { 4, Type::hearts }, { 4, Type::diamonds }, { 4, Type::spades }, { 4, Type::clubs }, { 5, Type::clubs }, { 6, Type::hearts } } };
-  game.playerStartsAttack ({ 2 });
-  game.countOfNotBeatenCardsOnTable ();
-  game.playerDefends (0, game.getDefendingPlayer ().getCards ().at (3));
-  game.countOfNotBeatenCardsOnTable ();
-  game.pass (PlayerRole::attack);
-  game.pass (PlayerRole::assistAttacker);
-  game.getTable ().size ();
-  game.getRound ();
+
+  int playerCount = 0;
+  std::cout << "Input Player Count: ";
+  std::cin >> playerCount;
+  std::cout << "Player Count: " << playerCount << std::endl;
+  auto playerNames = std::vector<std::string>{};
+  for (int i = 0; i < playerCount; i++)
+    {
+      auto playerName = std::string{};
+      std::cout << "Input Player Name: ";
+      std::cin >> playerName;
+      std::cout << "Player Name: " << playerName << std::endl;
+      playerNames.emplace_back (std::move (playerName));
+    }
+  auto playerSelection = std::string{};
+  auto game = Game{ std::move (playerNames) };
+  while (not game.checkIfGameIsOver ())
+    {
+      if (game.getAttackStarted ())
+        {
+          std::cout << tableAsString (game);
+        }
+      std::cout << attackingPlayerWithNameAndCardIndexValueAndType (game);
+      std::cout << "Attacking Player select Card by index to attack: ";
+      std::cin >> playerSelection;
+      if (game.getAttackStarted ())
+        {
+          game.playerAssists (PlayerRole::attack, { std::stoull (playerSelection) });
+        }
+      else
+        {
+          game.playerStartsAttack ({ std::stoull (playerSelection) });
+        }
+
+      std::cout << tableAsString (game);
+      std::cout << defendingPlayerWithNameAndCardIndexValueAndType (game);
+      std::cout << "Defending Player select Card to beat by index to defend or type 'd' to draw the cards from table: ";
+      std::cin >> playerSelection;
+      if (playerSelection.at (0) == 'd')
+        {
+          game.defendingPlayerTakesAllCardsFromTheTable ();
+        }
+      else
+        {
+          auto cardToBeatOnTableIndex = std::stoull (playerSelection);
+          std::cout << "Defending Player select Card to beat with by index to defend: ";
+          std::cin >> playerSelection;
+          game.playerDefends (cardToBeatOnTableIndex, game.getDefendingPlayer ().getCards ().at (std::stoull (playerSelection)));
+        }
+    }
   return 0;
 }

@@ -23,13 +23,15 @@ enum struct PlayerRole
 class Game
 {
 public:
-  Game (size_t playerCount);
+  explicit Game (std::vector<std::string> &&playerNames);
 
-  Game (size_t playerCount, std::vector<Card> &&cards);
+  Game (std::vector<std::string> &&playerNames, std::vector<Card> &&cards);
 
   void pass (PlayerRole playerRole);
 
   void rewokePass (PlayerRole playerRole);
+
+  // TODO play cards should work with cards an not with index
 
   // attack starts round and can only be used by playr with role attack
   bool playerStartsAttack (std::vector<size_t> const &index);
