@@ -48,7 +48,7 @@ main ()
             }
           else
             {
-              game.playerAssists (PlayerRole::attack, { std::stoull (playerSelection) });
+              game.playerAssists (PlayerRole::attack, sortedCardIndexing (game.getAttackingPlayer ().getCards (), { std::stoull (playerSelection) }));
             }
         }
       else
@@ -56,7 +56,7 @@ main ()
           std::cout << attackingPlayerWithNameAndCardIndexValueAndType (game);
           std::cout << "Attacking Player select Card by index to attack: ";
           std::cin >> playerSelection;
-          game.playerStartsAttack ({ std::stoull (playerSelection) });
+          game.playerStartsAttack (sortedCardIndexing (game.getAttackingPlayer ().getCards (), { std::stoull (playerSelection) }));
         }
       std::cout << tableAsString (game);
       std::cout << defendingPlayerWithNameAndCardIndexValueAndType (game);
@@ -74,7 +74,7 @@ main ()
             }
           else
             {
-              game.playerAssists (PlayerRole::attack, { std::stoull (playerSelection) });
+              game.playerAssists (PlayerRole::attack, sortedCardIndexing (game.getAttackingPlayer ().getCards (), { std::stoull (playerSelection) }));
             }
           game.defendingPlayerTakesAllCardsFromTheTable ();
         }

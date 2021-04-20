@@ -31,7 +31,8 @@ TEST_CASE ("player starts attack", "[game]")
 {
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
   REQUIRE (game.getPlayers ().at (static_cast<size_t> (PlayerRole::attack)).getCards ().size () == 6);
-  REQUIRE (game.playerStartsAttack ({ 2, 3, 4 }));
+
+  REQUIRE (game.playerStartsAttack ({ { 4, Type::diamonds }, { 4, Type::spades }, { 4, Type::clubs } }));
   REQUIRE (game.getPlayers ().at (static_cast<size_t> (PlayerRole::attack)).getCards ().size () == 3);
 }
 
@@ -40,10 +41,10 @@ TEST_CASE ("player assists attack", "[game]")
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
   auto cards = game.getPlayers ().at (static_cast<size_t> (PlayerRole::attack)).getCards ();
   REQUIRE (cards.size () == 6);
-  game.playerStartsAttack ({ 2, 3 });
+  game.playerStartsAttack ({ { 4, Type::spades }, { 4, Type::clubs } });
   cards = game.getPlayers ().at (static_cast<size_t> (PlayerRole::attack)).getCards ();
   REQUIRE (cards.size () == 4);
-  REQUIRE (game.playerAssists (PlayerRole::attack, { 2, 3 }));
+  REQUIRE (game.playerAssists (PlayerRole::attack, { { 4, Type::diamonds }, { 4, Type::hearts } }));
   cards = game.getPlayers ().at (static_cast<size_t> (PlayerRole::attack)).getCards ();
   REQUIRE (cards.size () == 2);
   REQUIRE (game.getTable ().size () == 4);
@@ -58,14 +59,14 @@ TEST_CASE ("cardsNotBeatenOnTable empty table", "[game]")
 TEST_CASE ("countOfNotBeatenCardsOnTable table with two cards which are not beaten", "[game]")
 {
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
-  game.playerStartsAttack ({ 2, 3 });
+  game.playerStartsAttack ({ { 4, Type::spades }, { 4, Type::clubs } });
   REQUIRE (game.countOfNotBeatenCardsOnTable () == 2);
 }
 
 TEST_CASE ("cardsNotBeatenOnTableWithIndex table with two cards which are not beaten", "[game]")
 {
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
-  game.playerStartsAttack ({ 2, 3 });
+  game.playerStartsAttack ({ { 4, Type::spades }, { 4, Type::clubs } });
   REQUIRE (game.cardsNotBeatenOnTableWithIndex ().size () == 2);
   auto [cardIndex, card] = game.cardsNotBeatenOnTableWithIndex ().at (0);
   REQUIRE (cardIndex == 0);
@@ -76,21 +77,21 @@ TEST_CASE ("cardsNotBeatenOnTableWithIndex table with two cards which are not be
 TEST_CASE ("playerDefends player beats one card of two cards on the table", "[game]")
 {
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
-  game.playerStartsAttack ({ 2, 3 });
+  game.playerStartsAttack ({ { 4, Type::spades }, { 4, Type::clubs } });
   REQUIRE (game.playerDefends (0, game.getPlayers ().at (static_cast<size_t> (PlayerRole::defend)).getCards ().at (3)));
 }
 
 TEST_CASE ("playerDefends value to low", "[game]")
 {
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
-  game.playerStartsAttack ({ 2, 3 });
+  game.playerStartsAttack ({ { 4, Type::spades }, { 4, Type::clubs } });
   REQUIRE_FALSE (game.playerDefends (0, game.getPlayers ().at (static_cast<size_t> (PlayerRole::defend)).getCards ().at (5)));
 }
 
 TEST_CASE ("playerDefends player beats all cards", "[game]")
 {
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
-  game.playerStartsAttack ({ 2 });
+  game.playerStartsAttack ({ { 4, Type::clubs } });
   REQUIRE (game.countOfNotBeatenCardsOnTable () == 1);
   REQUIRE (game.playerDefends (0, game.getPlayers ().at (static_cast<size_t> (PlayerRole::defend)).getCards ().at (3)));
   REQUIRE (game.countOfNotBeatenCardsOnTable () == 0);
@@ -99,7 +100,7 @@ TEST_CASE ("playerDefends player beats all cards", "[game]")
 TEST_CASE ("pass player beats all cards attack and def passes table gets cleared ", "[game]")
 {
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
-  game.playerStartsAttack ({ 2 });
+  game.playerStartsAttack ({ { 4, Type::clubs } });
   REQUIRE (game.countOfNotBeatenCardsOnTable () == 1);
   REQUIRE (game.playerDefends (0, game.getDefendingPlayer ().getCards ().at (3)));
   REQUIRE (game.countOfNotBeatenCardsOnTable () == 0);
@@ -112,7 +113,7 @@ TEST_CASE ("pass player beats all cards attack and def passes table gets cleared
 TEST_CASE ("try to play the game", "[game]")
 {
   auto game = Game{ { "player1", "player2" }, testCardDeck () };
-  game.playerStartsAttack ({ 2 });
+  game.playerStartsAttack ({ { 4, Type::clubs } });
   game.countOfNotBeatenCardsOnTable ();
   game.playerDefends (0, game.getDefendingPlayer ().getCards ().at (3));
   game.countOfNotBeatenCardsOnTable ();
@@ -122,16 +123,13 @@ TEST_CASE ("try to play the game", "[game]")
   game.getRound ();
   while (not game.checkIfGameIsOver ())
     {
-      game.playerStartsAttack ({ 0 });
+
+      game.playerStartsAttack ({ game.getAttackingPlayer ().getCards ().at (0) });
       game.defendingPlayerTakesAllCardsFromTheTable ();
     }
   REQUIRE (game.durak ());
 }
 
-TEST_CASE ("", "[game]")
-{
-  auto game = Game{ { "player1", "player2" }, testCardDeck () };
-  std::cout << cardsSortedByValueWithIndex (game.getAttackingPlayer ().getCards ());
-}
+TEST_CASE ("playground", "[game]") {}
 
 }

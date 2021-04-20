@@ -31,14 +31,11 @@ public:
 
   void rewokePass (PlayerRole playerRole);
 
-  // TODO play cards should work with cards an not with index
-  // TODO player attack assists and defends could throw an exception if something is wrong and client code could catch it print it and asks for intput and try it again
-
   // attack starts round and can only be used by playr with role attack
-  bool playerStartsAttack (std::vector<size_t> const &index);
+  bool playerStartsAttack (std::vector<Card> const &cards);
 
   // after attack is started player with role attack and assistAttacker can add cards with same value which are allready on the table
-  bool playerAssists (PlayerRole playerRole, std::vector<size_t> const &index);
+  bool playerAssists (PlayerRole playerRole, std::vector<Card> const &cards);
 
   // defending player can try to beat card on the table
   bool playerDefends (size_t indexFromCardOnTheTable, Card const &card);
@@ -74,6 +71,8 @@ public:
   std::optional<Player> durak () const;
 
   bool checkIfGameIsOver () const;
+
+  Type getTrump () const;
 
 private:
   void nextRound (bool attackingSuccess);

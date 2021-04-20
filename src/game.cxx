@@ -67,12 +67,10 @@ Game::rewokePass (PlayerRole player)
 }
 
 bool
-Game::playerStartsAttack (std::vector<size_t> const &index)
+Game::playerStartsAttack (std::vector<Card> const &cards)
 {
-
-  if (cardsAllowedToPlaceOnTable () >= index.size ())
+  if (cardsAllowedToPlaceOnTable () >= cards.size ())
     {
-      auto cards = getAttackingPlayer ().cardsForIndex (index);
       if (cardsHaveSameValue (cards))
         {
           getAttackingPlayer ().putCards (cards, table);
@@ -95,13 +93,12 @@ Game::playerStartsAttack (std::vector<size_t> const &index)
 }
 
 bool
-Game::playerAssists (PlayerRole player, std::vector<size_t> const &index)
+Game::playerAssists (PlayerRole player, std::vector<Card> const &cards)
 {
-  auto cards = players.at (static_cast<size_t> (player)).cardsForIndex (index);
   auto result = false;
   if (player == PlayerRole::attack || player == PlayerRole::assistAttacker)
     {
-
+      // TODO maybe we can do something here to make it more readable
       auto tableVector = getTableAsVector ();
       auto sortByValue = [] (auto const &x, auto const &y) { return x.value > y.value; };
       std::sort (tableVector.begin (), tableVector.end (), sortByValue);
@@ -133,6 +130,7 @@ Game::playerAssists (PlayerRole player, std::vector<size_t> const &index)
 bool
 Game::playerDefends (size_t indexFromCardOnTheTable, Card const &card)
 {
+
   if (table.size () <= indexFromCardOnTheTable)
     {
       return false;
@@ -406,4 +404,10 @@ drawSpecificCard (std::vector<Card> &cardDeck, Card const &cardToDraw)
       cardDeck.erase (card);
     }
   return result;
+}
+
+Type
+Game::getTrump () const
+{
+  return trump;
 }

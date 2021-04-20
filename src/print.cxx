@@ -27,13 +27,15 @@ operator<< (std::ostream &os, Player const &player)
 std::string
 cardsSortedByValueWithIndex (std::vector<Card> cards)
 {
-  auto result = std::vector<std::tuple<int, Card> >{};
-  pipes::mux (ranges::to<std::vector> (std::views::iota (size_t{}, cards.size ())), cards) >>= pipes::transform ([] (auto index, auto &&card) { return std::make_tuple (index, card); }) >>= pipes::push_back (result);
-  std::ranges::sort (result, [] (std::tuple<int, Card> const &x, std::tuple<int, Card> const &y) { return std::get<1> (x) < std::get<1> (y); });
+  std::ranges::sort (cards);
   auto cardsMessage = std::stringstream{};
   cardsMessage << "Cards sorted by Value with Index, Value and Type " << std::endl;
-  for (auto const &card : result)
-    cardsMessage << "index: " << std::get<0> (card) << " " << std::get<1> (card) << std::endl;
+  for (size_t i = 0; auto const &card : cards)
+    {
+      i++;
+      cardsMessage << "index: " << i << " " << card << std::endl;
+    }
+
   return cardsMessage.str ();
 }
 
@@ -41,7 +43,7 @@ std::string
 attackingPlayerWithNameAndCardIndexValueAndType (Game const &game)
 {
   auto result = std::stringstream{};
-  result << game.getAttackingPlayer ().id << " Attacking Player: " << cardsSortedByValueWithIndex (game.getAttackingPlayer ().getCards ());
+  result << "Attacking Player: " << game.getAttackingPlayer ().id << std::endl << "trump: " << magic_enum::enum_name (game.getTrump ()) << std::endl << cardsSortedByValueWithIndex (game.getAttackingPlayer ().getCards ());
   return result.str ();
 }
 
@@ -49,7 +51,7 @@ std::string
 defendingPlayerWithNameAndCardIndexValueAndType (Game const &game)
 {
   auto result = std::stringstream{};
-  result << game.getDefendingPlayer ().id << " Defending Player: " << cardsSortedByValueWithIndex (game.getDefendingPlayer ().getCards ());
+  result << "Defending Player: " << game.getDefendingPlayer ().id << std::endl << "trump: " << magic_enum::enum_name (game.getTrump ()) << std::endl << cardsSortedByValueWithIndex (game.getDefendingPlayer ().getCards ());
   return result.str ();
 }
 
@@ -57,15 +59,13 @@ std::string
 assistingPlayerWithNameAndCardIndexValueAndType (Game const &game)
 {
   auto result = std::stringstream{};
-  result << game.getAssistingPlayer ().id << " Assisting Player: " << cardsSortedByValueWithIndex (game.getAssistingPlayer ().getCards ());
+  result << "Assisting Player: " << game.getAssistingPlayer ().id << std::endl << "trump: " << magic_enum::enum_name (game.getTrump ()) << std::endl << cardsSortedByValueWithIndex (game.getAssistingPlayer ().getCards ());
   return result.str ();
 }
 
 std::string
 tableAsString (Game const &game)
 {
-  // TODO cards should get sorted than we add index. if the player clicks on a card we use the card and not the index to do the rest of the logic
-
   auto result = std::vector<std::tuple<int, Card, std::optional<Card> > >{};
   pipes::mux (ranges::to<std::vector> (std::views::iota (size_t{}, game.getTable ().size ())), game.getTable ()) >>= pipes::transform ([] (auto index, auto &&card) { return std::make_tuple (index, card.first, card.second); }) >>= pipes::push_back (result);
   std::ranges::sort (result, [] (std::tuple<int, Card, std::optional<Card> > const &x, std::tuple<int, Card, std::optional<Card> > const &y) { return std::get<1> (x) < std::get<1> (y); });
