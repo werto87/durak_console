@@ -101,14 +101,13 @@ Game::playerAssists (PlayerRole player, std::vector<Card> const &cards)
       // TODO maybe we can do something here to make it more readable
       auto tableVector = getTableAsVector ();
       auto sortByValue = [] (auto const &x, auto const &y) { return x.value > y.value; };
-      std::sort (tableVector.begin (), tableVector.end (), sortByValue);
+      std::ranges::sort (tableVector, sortByValue);
       auto equal = [] (auto const &x, auto const &y) { return x.value == y.value; };
       tableVector.erase (std::unique (tableVector.begin (), tableVector.end (), equal), tableVector.end ());
       auto isAllowedToPutCards = true;
-
       for (auto const &card : cards)
         {
-          if (not std::binary_search (tableVector.begin (), tableVector.end (), card, sortByValue))
+          if (not std::ranges::binary_search (tableVector, card, sortByValue))
             {
               isAllowedToPutCards = false;
               break;
@@ -130,7 +129,6 @@ Game::playerAssists (PlayerRole player, std::vector<Card> const &cards)
 bool
 Game::playerDefends (size_t indexFromCardOnTheTable, Card const &card)
 {
-
   if (table.size () <= indexFromCardOnTheTable)
     {
       return false;
