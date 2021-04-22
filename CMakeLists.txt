@@ -39,11 +39,11 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
 
-set(TARGET_NAME project)
+set(TARGET_NAME durak_console)
 add_executable(${TARGET_NAME})
 
 ######## add sub dir
-add_subdirectory(src) 
+#add_subdirectory(src) 
 
 
 ####### link
@@ -57,14 +57,11 @@ target_include_directories(${TARGET_NAME} PRIVATE
 target_link_libraries(${TARGET_NAME} PRIVATE
 ${PROJECT_WARNINGS}
 ${PROJECT_OPTIONS}
-CONAN_PKG::range-v3
-CONAN_PKG::pipes
-CONAN_PKG::magic_enum
-CONAN_PKG::fmt
+CONAN_PKG::durak
 )
 
 ####### create executable
-OPTION(BUILD_TESTS "enable tests" ON)
+OPTION(BUILD_TESTS "enable tests" OFF)
 IF(BUILD_TESTS)
     enable_testing()
     add_subdirectory(test) 

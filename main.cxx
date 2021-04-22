@@ -1,6 +1,6 @@
-#include "src/card.hxx"
-#include "src/game.hxx"
-#include "src/print.hxx"
+#include "durak/card.hxx"
+#include "durak/game.hxx"
+#include "durak/print.hxx"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -15,6 +15,7 @@
 int
 main ()
 {
+  using namespace durak;
   int playerCount = 0;
   std::cout << "Input Player Count: ";
   std::cin >> playerCount;
