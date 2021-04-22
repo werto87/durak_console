@@ -145,7 +145,7 @@ Game::playerDefends (size_t indexFromCardOnTheTable, Card const &card)
       else
         {
           rewokePass (PlayerRole::attack);
-          rewokePass (PlayerRole::defend);
+          rewokePass (PlayerRole::assistAttacker);
         }
       return true;
     }
@@ -282,6 +282,7 @@ Game::drawCards ()
 void
 Game::nextRound (bool attackingSuccess)
 {
+  std::cout << "NEW ROUND############################################################################################" << std::endl;
   table.clear ();
   round++;
   attackStarted = false;

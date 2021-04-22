@@ -58,6 +58,26 @@ main ()
           std::cin >> playerSelection;
           game.playerStartsAttack (sortedCardIndexing (game.getAttackingPlayer ().getCards (), { std::stoull (playerSelection) }));
         }
+      // assisting player
+      if (game.getPlayers ().size () >= 3)
+        {
+          std::cout << tableAsString (game);
+          std::cout << assistingPlayerWithNameAndCardIndexValueAndType (game);
+          std::cout << "Assisting Player select Card to support or 'p' to pass: ";
+          std::cin >> playerSelection;
+          if (playerSelection.at (0) == 'p')
+            {
+              if (game.pass (PlayerRole::assistAttacker))
+                {
+                  // if pass was successfull round is over
+                  continue;
+                }
+            }
+          else
+            {
+              game.playerAssists (PlayerRole::assistAttacker, sortedCardIndexing (game.getAssistingPlayer ().getCards (), { std::stoull (playerSelection) }));
+            }
+        }
       std::cout << tableAsString (game);
       std::cout << defendingPlayerWithNameAndCardIndexValueAndType (game);
       std::cout << "Defending Player select Card to beat by index to defend or type 'd' to draw the cards from table: ";
@@ -76,6 +96,21 @@ main ()
             {
               game.playerAssists (PlayerRole::attack, sortedCardIndexing (game.getAttackingPlayer ().getCards (), { std::stoull (playerSelection) }));
             }
+          if (game.getPlayers ().size () >= 3)
+            {
+              std::cout << tableAsString (game);
+              std::cout << assistingPlayerWithNameAndCardIndexValueAndType (game);
+              std::cout << "Defending Player takes Cards from table you can add cards with index or press 'p' to pass: ";
+              std::cin >> playerSelection;
+              if (playerSelection.at (0) == 'p')
+                {
+                  game.pass (PlayerRole::assistAttacker);
+                }
+              else
+                {
+                  game.playerAssists (PlayerRole::assistAttacker, sortedCardIndexing (game.getAssistingPlayer ().getCards (), { std::stoull (playerSelection) }));
+                }
+            }
           game.defendingPlayerTakesAllCardsFromTheTable ();
         }
       else
@@ -83,7 +118,7 @@ main ()
           auto cardToBeatOnTableIndex = std::stoull (playerSelection);
           std::cout << "Defending Player select Card to beat with by index to defend: ";
           std::cin >> playerSelection;
-          game.playerDefends (cardToBeatOnTableIndex, game.getDefendingPlayer ().getCards ().at (std::stoull (playerSelection)));
+          game.playerDefends (cardToBeatOnTableIndex, sortedCardIndexing (game.getDefendingPlayer ().getCards (), { std::stoull (playerSelection) }).at (0));
         }
     }
   if (auto durak = game.durak ())

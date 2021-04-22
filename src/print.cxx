@@ -66,6 +66,10 @@ assistingPlayerWithNameAndCardIndexValueAndType (Game const &game)
 std::string
 tableAsString (Game const &game)
 {
+  // TODO sorting does not match with show cards
+  // we need to sort and than add the index
+  // maybe we skip beeten cards there is no reason that they have an index
+  // maybe we put them at the start and the other cards and with an index at the end
   auto result = std::vector<std::tuple<int, Card, std::optional<Card> > >{};
   pipes::mux (ranges::to<std::vector> (std::views::iota (size_t{}, game.getTable ().size ())), game.getTable ()) >>= pipes::transform ([] (auto index, auto &&card) { return std::make_tuple (index, card.first, card.second); }) >>= pipes::push_back (result);
   std::ranges::sort (result, [] (std::tuple<int, Card, std::optional<Card> > const &x, std::tuple<int, Card, std::optional<Card> > const &y) { return std::get<1> (x) < std::get<1> (y); });
