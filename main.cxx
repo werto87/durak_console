@@ -58,7 +58,6 @@ main ()
           std::cin >> playerSelection;
           game.playerStartsAttack (sortedCardIndexing (game.getAttackingPlayer ().getCards (), { std::stoull (playerSelection) }));
         }
-      // assisting player
       if (game.getPlayers ().size () >= 3)
         {
           std::cout << tableAsString (game);
